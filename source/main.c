@@ -194,11 +194,12 @@ int main(int argc, char* argv[]) {
 			cameraY = cameraY + 10;
 		}
 		if (kHeld & KEY_CPAD_RIGHT) { //pad right
-			if (playerXAcc <= 0) playerXAcc = playerXAcc + 1;
-			playerXAcc = playerXAcc + 0.5;
+			if (playerXAcc <= 0) playerXAcc = 0;
+			playerXAcc = playerXAcc + 1;
 		} 
 		if (kHeld & KEY_CPAD_LEFT) { //pad left
-			playerXAcc = playerXAcc - 0.5;
+			if (playerXAcc >= 0) playerXAcc = 0;
+			playerXAcc = playerXAcc - 1;
 		} 
 		if (kDown & KEY_B) { //B
 			if (collisionMap[playerTileX][playerTileY] == 1) {
@@ -218,14 +219,32 @@ int main(int argc, char* argv[]) {
 		if (kDown & KEY_L) { //L
 			
 		}
-			//enact gravity
+			//collisions
 			if (collisionMap[playerTileX][playerTileY] == 1 && playerGravity >= 0) { //tile below
 				playerGravity = 0;
 				playerY = (playerTileY * 16) - 20;
 				if (kHeld & KEY_B) {} else jumpBoost = 5;
 			} else if (collisionMap[playerTileX][playerTileY-1] == 1) { //inside tile
+				playerY = ((playerTileY-1) * 16) - 20;
 				playerGravity = -1;
 			}
+			if (collisionMap[playerTileX+1][playerTileY-1] == 1) { //right bump
+				if (playerXAcc >= 0) {
+					playerXAcc = 0;
+					playerX = playerTileX * 16;
+				}
+			}
+			if (collisionMap[playerTileX-1][playerTileY-1] == 1) { //left bump
+				if (playerXAcc <= 0) {
+					playerXAcc = 0;
+					playerX = playerTileX * 16;
+				}
+			}
+			playerX = playerX + playerXAcc;
+			if (playerXAcc > 0) playerXAcc = playerXAcc - 0.5;
+			else if (playerXAcc < 0) playerXAcc = playerXAcc + 0.5;
+			if (playerXAcc > 5) playerXAcc = 5;
+			else if (playerXAcc < -5) playerXAcc = -5;
 			playerY = playerY + playerGravity;
 			drawScene();
 		}
@@ -261,6 +280,7 @@ int main(int argc, char* argv[]) {
 			}	
 		} 
 		else if (sceneType == 0) { //main menu
+			
 			if (sceneNumber == 0) { //main menu menu
 				menuOptions = 3;
 				drawBGSprite(1, 0, 0);
@@ -351,6 +371,7 @@ int main(int argc, char* argv[]) {
 				if (sceneNumber == 1) sceneNumber = 0;
 				else if (sceneNumber == 2) sceneNumber = 1;
 			}
+			drawWordSprite("v 0.02", 1, 215, 0.5);
 		} else if (sceneType == 2) { 
 		
 		}
