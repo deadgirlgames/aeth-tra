@@ -1,0 +1,3 @@
+audio.wav must be 16bit and 16point sync, not sure max length; try to keep around 2 sec
+copy over cara.elf
+edit CIABUILDER.BAT in notepad to change filenames and such

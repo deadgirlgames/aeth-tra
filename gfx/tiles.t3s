@@ -1,0 +1,16 @@
+--atlas -f rgba8888 -z auto
+tiles/snowtile.png
+tiles/snow-grass-1.png
+tiles/tree1-1.png
+tiles/tree1-2.png
+tiles/tree1-4.png
+tiles/tree1-3.png
+tiles/snow-river-top.png
+tiles/river1.png
+tiles/snow-grass-2.png
+tiles/snow-grass-river-left.png
+tiles/snow-grass-river-left-top.png
+tiles/snow-grass-left-top.png
+tiles/snow-grass-right-top.png
+tiles/snow-grass-3.png
+tiles/ground-top.png

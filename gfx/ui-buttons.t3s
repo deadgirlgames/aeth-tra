@@ -1,0 +1,20 @@
+--atlas -f rgba8888 -z auto
+ui/cara-title.png
+ui/ephrata-title.png
+ui/kalama-title.png
+ui/pause-title.png
+ui/selection-box.png
+ui/001-singleplayer.png
+ui/multiplayer.png
+ui/options.png
+ui/quit.png
+ui/textbox.png
+ui/textbox-background.png
+ui/menubox.png
+ui/menubox-background.png
+ui/menuselector.png
+ui/menubox-big.png
+ui/menubox-big-background.png
+ui/menubox-big-selector.png
+ui/bottom-screen-battle.png
+ui/menubox-background-fade.png
