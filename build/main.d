@@ -1,4 +1,4 @@
-main.o: C\:/Users/bitchfani/devkitpro/projects/aeth-tra/source/main.c \
+main.o: C\:/Users/bitchfani/devkitpro/projects/aeth-trA/source/main.c \
  C\:/devkitPro/libctru/include/citro2d.h \
  C\:/devkitPro/libctru/include/citro3d.h \
  C\:/devkitPro/libctru/include/c3d/types.h \

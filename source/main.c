@@ -171,6 +171,8 @@ int main(int argc, char* argv[]) {
 		if (playerGravity < 5) playerGravity = playerGravity + 1;
 		int playerTileY = (int) (playerY + 20) / 16;
 		int playerTileX = (int) (playerX + 0) / 16;
+		int playerTileXR = (int) (playerX + 15) / 16;
+		int playerTileXL = (int) (playerX - 1) / 16;
 		//controls
 		if (kDown & KEY_START && battleType == 0) { //pause game
 			paused = true; 
@@ -220,13 +222,22 @@ int main(int argc, char* argv[]) {
 			
 		}
 			//collisions
-			if (collisionMap[playerTileX][playerTileY] == 1 && playerGravity >= 0) { //tile below
-				playerGravity = 0;
-				playerY = (playerTileY * 16) - 20;
-				if (kHeld & KEY_B) {} else jumpBoost = 5;
+			if (collisionMap[playerTileXR][playerTileY] == 1 && playerGravity >= 0) { //tile below
+				if (playerGravity >= 0) playerY = (playerTileY * 16) - 20;
+				if (playerGravity >= 0) playerGravity = 0;
+				if (!(kHeld & KEY_B)) jumpBoost = 5;
+			} else if (collisionMap[playerTileXR][playerTileY-1] == 1) { //inside tile
+				if (playerGravity >= 0) playerY = ((playerTileY-1) * 16) - 20;
+				if (playerGravity >= 0) playerGravity = -1;
+				if (!(kHeld & KEY_B)) jumpBoost = 5;
+			} else if (collisionMap[playerTileX][playerTileY] == 1 && playerGravity >= 0) { //tile below
+				if (playerGravity >= 0) playerY = (playerTileY * 16) - 20;
+				if (playerGravity >= 0) playerGravity = 0;
+				if (!(kHeld & KEY_B)) jumpBoost = 5;
 			} else if (collisionMap[playerTileX][playerTileY-1] == 1) { //inside tile
-				playerY = ((playerTileY-1) * 16) - 20;
-				playerGravity = -1;
+				if (playerGravity >= 0) playerY = ((playerTileY-1) * 16) - 20;
+				if (playerGravity >= 0) playerGravity = -1;
+				if (!(kHeld & KEY_B)) jumpBoost = 5;
 			}
 			if (collisionMap[playerTileX+1][playerTileY-1] == 1) { //right bump
 				if (playerXAcc >= 0) {
@@ -234,10 +245,10 @@ int main(int argc, char* argv[]) {
 					playerX = playerTileX * 16;
 				}
 			}
-			if (collisionMap[playerTileX-1][playerTileY-1] == 1) { //left bump
+			if (collisionMap[playerTileXL][playerTileY-1] == 1) { //left bump
 				if (playerXAcc <= 0) {
 					playerXAcc = 0;
-					playerX = playerTileX * 16;
+					playerX = playerTileXL * 16 + 16;
 				}
 			}
 			playerX = playerX + playerXAcc;
@@ -371,7 +382,7 @@ int main(int argc, char* argv[]) {
 				if (sceneNumber == 1) sceneNumber = 0;
 				else if (sceneNumber == 2) sceneNumber = 1;
 			}
-			drawWordSprite("v 0.02", 1, 215, 0.5);
+			drawWordSprite("v 0.03", 1, 215, 0.5);
 		} else if (sceneType == 2) { 
 		
 		}
@@ -519,6 +530,8 @@ void createMap1() {
 	drawCollisionArray(1, 0, 9, 100, 1);
 	drawTileArray(14, 20, 7, 2, 2);
 	drawCollisionArray(1, 20, 7, 2, 2);
+	drawTileArray(14, 15, 7, 1, 2);
+	drawCollisionArray(1, 15, 7, 1, 2);
 	/*
 	drawTileArray(1, 16, 4, 3, 3);
 	tileMap1[17][7] = 1;
