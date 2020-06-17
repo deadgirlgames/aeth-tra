@@ -7,6 +7,10 @@
 #include <3ds.h>
 #include <time.h>
 
+#define CAMERA_LEFT_BUMP  -140
+#define CAMERA_RIGHT_BUMP  140
+#define CAMERA_TOP_BUMP  -60
+#define CAMERA_BOTTOM_BUMP  60
 #define MAX_SPRITES   768
 #define DISPLAY_TRANSFER_FLAGS \
 	(GX_TRANSFER_FLIP_VERT(0) | GX_TRANSFER_OUT_TILED(0) | GX_TRANSFER_RAW_COPY(0) | \
@@ -19,11 +23,22 @@ int playerX = 200;
 int playerY = 90;
 int cameraX = 0;
 int cameraY = 0;
+int cameraXT;
+int cameraYT;
+int cameraXO;
+int cameraYO;
+int cameraXD;
+int cameraYD;
+int cameraXM;
+int cameraYM;
+float cameraScroll = 0.5; //how fast the camera responds
 float playerGravity = 0; //how much gravity to enact this frame
 float playerXAcc = 0;
 bool isMoving = false; //is player moving
 int jumpBoost = 0; //allows for increasing jump height by holding the jump button
 int attackTimer = 0; //frames for attack to be on screen
+int attackCooldownTimer = 0; //frames of attack cooldown
+bool isAttacking = false; //is player attacking
 int tempX = 0; //mostly for moving sprites around and anims
 
 //player battle variables	
@@ -101,6 +116,7 @@ void audio_ch10(const char *audio);
 void audio_ch11(const char *audio);
 void loadFiles();
 void drawScene();
+void moveCamera();
 			
 //---------------------------------------------------------------------------------
 int main(int argc, char* argv[]) {
@@ -206,8 +222,16 @@ int main(int argc, char* argv[]) {
 		if (kDown & KEY_B) { //B
 			if (collisionMap[playerTileX][playerTileY] == 1) {
 				playerGravity = -4;
+				jumpBoost = 5;
 			} else if (collisionMap[playerTileX][playerTileY-1] == 1) {
 				playerGravity = -5;
+				jumpBoost = 5;
+			} else if (collisionMap[playerTileXR][playerTileY] == 1) {
+				playerGravity = -4;
+				jumpBoost = 5;
+			} else if (collisionMap[playerTileXR][playerTileY-1] == 1) {
+				playerGravity = -5;
+				jumpBoost = 5;
 			}
 		} else if (kHeld & KEY_B) {
 			if (jumpBoost > 0) {
@@ -225,19 +249,15 @@ int main(int argc, char* argv[]) {
 			if (collisionMap[playerTileXR][playerTileY] == 1 && playerGravity >= 0) { //tile below
 				if (playerGravity >= 0) playerY = (playerTileY * 16) - 20;
 				if (playerGravity >= 0) playerGravity = 0;
-				if (!(kHeld & KEY_B)) jumpBoost = 5;
 			} else if (collisionMap[playerTileXR][playerTileY-1] == 1) { //inside tile
 				if (playerGravity >= 0) playerY = ((playerTileY-1) * 16) - 20;
 				if (playerGravity >= 0) playerGravity = -1;
-				if (!(kHeld & KEY_B)) jumpBoost = 5;
 			} else if (collisionMap[playerTileX][playerTileY] == 1 && playerGravity >= 0) { //tile below
 				if (playerGravity >= 0) playerY = (playerTileY * 16) - 20;
 				if (playerGravity >= 0) playerGravity = 0;
-				if (!(kHeld & KEY_B)) jumpBoost = 5;
 			} else if (collisionMap[playerTileX][playerTileY-1] == 1) { //inside tile
 				if (playerGravity >= 0) playerY = ((playerTileY-1) * 16) - 20;
 				if (playerGravity >= 0) playerGravity = -1;
-				if (!(kHeld & KEY_B)) jumpBoost = 5;
 			}
 			if (collisionMap[playerTileX+1][playerTileY-1] == 1) { //right bump
 				if (playerXAcc >= 0) {
@@ -257,6 +277,7 @@ int main(int argc, char* argv[]) {
 			if (playerXAcc > 5) playerXAcc = 5;
 			else if (playerXAcc < -5) playerXAcc = -5;
 			playerY = playerY + playerGravity;
+			moveCamera();
 			drawScene();
 		}
 
@@ -382,7 +403,7 @@ int main(int argc, char* argv[]) {
 				if (sceneNumber == 1) sceneNumber = 0;
 				else if (sceneNumber == 2) sceneNumber = 1;
 			}
-			drawWordSprite("v 0.03", 1, 215, 0.5);
+			drawWordSprite("v 0.04", 1, 215, 0.5);
 		} else if (sceneType == 2) { 
 		
 		}
@@ -532,23 +553,8 @@ void createMap1() {
 	drawCollisionArray(1, 20, 7, 2, 2);
 	drawTileArray(14, 15, 7, 1, 2);
 	drawCollisionArray(1, 15, 7, 1, 2);
-	/*
-	drawTileArray(1, 16, 4, 3, 3);
-	tileMap1[17][7] = 1;
-	tileMap1[18][7] = 1;
-	tileMap1[18][8] = 1;
-	
-	drawTileArray(14, 4, 9, 18, 1);
-	drawTileArray(7, 4, 10, 18, 3);
-	drawTileArray(8, 10, 6, 4, 6);
-	tileMap1[10][6] = 11;
-	tileMap1[13][6] = 12;
-	tileMap1[11][9] = 13;
-	tileMap1[12][9] = 13;
-	tileMap1[12][8] = 13;
-	drawTileArray(9, 10, 9, 1, 6);
-	tileMap1[10][9] = 10;
-	*/
+	drawTileArray(14, 28, 3, 5, 3);
+	drawCollisionArray(1, 28, 3, 5, 3);
 }
 
 void drawWordSprite (char input[], int x, int y, float scale) {
@@ -791,5 +797,30 @@ void drawScene() {
 	if (battleType == 0) { //offline
 		drawTiles(cameraX, cameraY);
 		drawMainSprite(0, playerX - cameraX, playerY - cameraY);
+	}
+}
+
+void moveCamera() { 
+	//t = temp, o = offset, d = difference, m = move
+	cameraXT = cameraX + 200 - 8; //move temp camera to center instead of top left
+	cameraYT = cameraY + 160 - 50; //move temp camera to center instead of top left
+	cameraXO = playerX - cameraXT; //find diff between player pos & camera pos
+	cameraYO = playerY - cameraYT; //find diff between player pos & camera pos
+	if (cameraXO > CAMERA_RIGHT_BUMP) {
+		cameraXD = cameraXO - CAMERA_RIGHT_BUMP;
+		cameraXM = (int) cameraXD * cameraScroll;
+		cameraX = cameraX + cameraXM;
+	} else if (cameraXO < CAMERA_LEFT_BUMP) {
+		cameraXD = cameraXO - CAMERA_LEFT_BUMP;
+		cameraXM = (int) cameraXD * cameraScroll;
+		cameraX = cameraX + cameraXM;
+	} if (cameraYO > CAMERA_BOTTOM_BUMP) {
+		cameraYD = cameraYO - CAMERA_BOTTOM_BUMP;
+		cameraYM = (int) cameraYD * cameraScroll;
+		cameraY = cameraY + cameraYM;
+	} else if (cameraYO < CAMERA_TOP_BUMP) {
+		cameraYD = cameraYO - CAMERA_TOP_BUMP;
+		cameraYM = (int) cameraYD * cameraScroll;
+		cameraY = cameraY + cameraYM;
 	}
 }
